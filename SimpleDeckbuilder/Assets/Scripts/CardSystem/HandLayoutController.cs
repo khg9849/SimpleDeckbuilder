@@ -7,6 +7,7 @@ public class HandLayoutController : MonoBehaviour
     [Header("카드 배치 설정")]
     [SerializeField] private float angleRange = 60f;         // 펼쳐질 총 각도
     [SerializeField] private float radius = 400f;            // 중심으로부터 거리
+    [SerializeField] private Vector2 posOffset = new Vector2(0, 0);//카드 위치 오프셋
     [SerializeField] private float selectedYOffset = 40f;    // 선택된 카드 튀어나옴 정도
     [SerializeField] private float sidePushOffset = 40f;     // 선택 시 양 옆 카드 밀림 정도
     [SerializeField] private float posXStep = 120f;
@@ -25,14 +26,19 @@ public class HandLayoutController : MonoBehaviour
 
     public void SelectCard(CardUI selectedCard)
     {
-        if (selectedIndex != cards.IndexOf(selectedCard))
+        int index = cards.IndexOf(selectedCard);
+        if (selectedIndex != index)
         {
-            selectedIndex = cards.IndexOf(selectedCard);
+            selectedIndex = index;
+            selectedCard.transform.SetAsLastSibling(); // 선택된 카드를 맨 뒤로 이동
         }
         else
         {
+            selectedCard.transform.SetSiblingIndex(index);
             selectedIndex = -1;
         }
+
+
         UpdateLayout();
     }
 
@@ -52,6 +58,7 @@ public class HandLayoutController : MonoBehaviour
     public void AddCard(CardUI newCard)
     {
         cards.Add(newCard);
+        newCard.transform.SetAsFirstSibling(); // 새 카드를 맨 앞에 배치
         UpdateLayout();
     }
 
@@ -74,11 +81,11 @@ public class HandLayoutController : MonoBehaviour
 
             // 카드 사이 간격은 X 기준으로 정렬
             float offsetX = (i - (count - 1) / 2f) * posXStep;
-            Vector2 anchoredPos = center + new Vector2(offsetX, Mathf.Cos(Mathf.Deg2Rad * angle) * radius);
-
+            Vector2 anchoredPos = center + new Vector2(offsetX + posOffset.x, Mathf.Cos(Mathf.Deg2Rad * angle) * radius + posOffset.y);
             if (i == selectedIndex)
             {
                 Vector2 forwardOffset = rotation * new Vector2(0f, selectedYOffset);
+                rotation = Quaternion.identity; // 회전값을 초기화하여 카드가 정면을 바라보도록 함
                 anchoredPos += forwardOffset;
             }
             else if (selectedIndex >= 0)
